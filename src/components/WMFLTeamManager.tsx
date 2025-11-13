@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Icon from "@/components/ui/icon";
+import { WMFLTeamCard } from "@/components/wmfl/WMFLTeamCard";
+import { WMFLTeamForm } from "@/components/wmfl/WMFLTeamForm";
+import { WMFLImportDialog } from "@/components/wmfl/WMFLImportDialog";
 
 const API_URL = "https://functions.poehali.dev/96772adf-c6d7-4f02-ad46-dabfba5927f6";
 const IMPORT_URL = "https://functions.poehali.dev/2d831230-a55e-458d-8be8-b879bb2d1090";
@@ -202,50 +203,14 @@ export const WMFLTeamManager = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">Рейтинг команд WMFL</h2>
         <div className="flex gap-2">
-          <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Icon name="Download" size={18} className="mr-2" />
-                Импорт из WMFL
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Импорт команд из турнира WMFL</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="tournament_id">ID турнира</Label>
-                  <Input
-                    id="tournament_id"
-                    value={tournamentId}
-                    onChange={(e) => setTournamentId(e.target.value)}
-                    placeholder="1056456"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    ID можно найти в URL турнира: wmfl.ru/tournament/[ID]/...
-                  </p>
-                </div>
-                <Button 
-                  onClick={handleImport} 
-                  disabled={importing || !tournamentId}
-                  className="w-full"
-                >
-                  {importing ? (
-                    <>
-                      <Icon name="Loader2" className="animate-spin mr-2" size={16} />
-                      Импортирую...
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="Download" size={16} className="mr-2" />
-                      Импортировать
-                    </>
-                  )}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <WMFLImportDialog
+            isOpen={importDialogOpen}
+            onOpenChange={setImportDialogOpen}
+            tournamentId={tournamentId}
+            setTournamentId={setTournamentId}
+            onImport={handleImport}
+            importing={importing}
+          />
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -254,147 +219,25 @@ export const WMFLTeamManager = () => {
                 Добавить команду
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingTeam ? "Редактировать команду" : "Добавить команду"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="team_name">Название команды *</Label>
-                  <Input
-                    id="team_name"
-                    value={formData.team_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, team_name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="city">Город</Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) =>
-                      setFormData({ ...formData, city: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="stadium">Стадион</Label>
-                  <Input
-                    id="stadium"
-                    value={formData.stadium}
-                    onChange={(e) =>
-                      setFormData({ ...formData, stadium: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="rating">Рейтинг</Label>
-                  <Input
-                    id="rating"
-                    type="number"
-                    value={formData.rating}
-                    onChange={(e) =>
-                      setFormData({ ...formData, rating: parseInt(e.target.value) })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="wins">Победы</Label>
-                  <Input
-                    id="wins"
-                    type="number"
-                    value={formData.wins}
-                    onChange={(e) =>
-                      setFormData({ ...formData, wins: parseInt(e.target.value) })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="draws">Ничьи</Label>
-                  <Input
-                    id="draws"
-                    type="number"
-                    value={formData.draws}
-                    onChange={(e) =>
-                      setFormData({ ...formData, draws: parseInt(e.target.value) })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="losses">Поражения</Label>
-                  <Input
-                    id="losses"
-                    type="number"
-                    value={formData.losses}
-                    onChange={(e) =>
-                      setFormData({ ...formData, losses: parseInt(e.target.value) })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="goals_for">Забито голов</Label>
-                  <Input
-                    id="goals_for"
-                    type="number"
-                    value={formData.goals_for}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        goals_for: parseInt(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="goals_against">Пропущено голов</Label>
-                  <Input
-                    id="goals_against"
-                    type="number"
-                    value={formData.goals_against}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        goals_against: parseInt(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="form">Форма (напр: ВВВДП)</Label>
-                  <Input
-                    id="form"
-                    value={formData.form}
-                    onChange={(e) =>
-                      setFormData({ ...formData, form: e.target.value })
-                    }
-                    maxLength={20}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
-                  {editingTeam ? "Обновить" : "Добавить"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsDialogOpen(false);
-                    resetForm();
-                  }}
-                >
-                  Отмена
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingTeam ? "Редактировать команду" : "Добавить команду"}
+                </DialogTitle>
+              </DialogHeader>
+              <WMFLTeamForm
+                formData={formData}
+                setFormData={setFormData}
+                onSubmit={handleSubmit}
+                onCancel={() => {
+                  setIsDialogOpen(false);
+                  resetForm();
+                }}
+                isEditing={!!editingTeam}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -407,99 +250,13 @@ export const WMFLTeamManager = () => {
           </Card>
         ) : (
           teams.map((team, index) => (
-            <Card key={team.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-12 h-12 bg-primary text-primary-foreground rounded-full font-bold text-xl">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl">{team.team_name}</CardTitle>
-                      {team.city && (
-                        <p className="text-sm text-muted-foreground">{team.city}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEditDialog(team)}
-                    >
-                      <Icon name="Edit" size={16} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(team.team_id || team.id)}
-                    >
-                      <Icon name="Trash2" size={16} />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Рейтинг</p>
-                    <p className="text-2xl font-bold text-primary">{team.rating}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Очки</p>
-                    <p className="text-2xl font-bold">{team.points}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Матчи</p>
-                    <p className="text-lg">
-                      {team.wins}-{team.draws}-{team.losses}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Голы</p>
-                    <p className="text-lg">
-                      {team.goals_for}:{team.goals_against}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Разница</p>
-                    <p
-                      className={`text-lg font-semibold ${
-                        team.goal_difference > 0
-                          ? "text-green-600"
-                          : team.goal_difference < 0
-                          ? "text-red-600"
-                          : ""
-                      }`}
-                    >
-                      {team.goal_difference > 0 ? "+" : ""}
-                      {team.goal_difference}
-                    </p>
-                  </div>
-                </div>
-                {team.form && (
-                  <div className="mt-4 flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Форма:</span>
-                    <div className="flex gap-1">
-                      {team.form.split("").map((result, i) => (
-                        <span
-                          key={i}
-                          className={`w-6 h-6 flex items-center justify-center rounded text-xs font-bold ${
-                            result === "В"
-                              ? "bg-green-500 text-white"
-                              : result === "Н"
-                              ? "bg-gray-500 text-white"
-                              : "bg-red-500 text-white"
-                          }`}
-                        >
-                          {result}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <WMFLTeamCard
+              key={team.id}
+              team={team}
+              index={index}
+              onEdit={openEditDialog}
+              onDelete={handleDelete}
+            />
           ))
         )}
       </div>
