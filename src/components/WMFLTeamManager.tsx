@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import Icon from "@/components/ui/icon";
 
 const API_URL = "https://functions.poehali.dev/96772adf-c6d7-4f02-ad46-dabfba5927f6";
+const IMPORT_URL = "https://functions.poehali.dev/2d831230-a55e-458d-8be8-b879bb2d1090";
 
 interface WMFLTeam {
   id: number;
@@ -46,6 +47,9 @@ export const WMFLTeamManager = () => {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<WMFLTeam | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [tournamentId, setTournamentId] = useState("1056456");
+  const [importing, setImporting] = useState(false);
 
   const [formData, setFormData] = useState({
     team_name: "",
@@ -157,6 +161,34 @@ export const WMFLTeamManager = () => {
     setIsDialogOpen(true);
   };
 
+  const handleImport = async () => {
+    try {
+      setImporting(true);
+      const response = await fetch(IMPORT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tournament_id: parseInt(tournamentId) }),
+      });
+
+      if (!response.ok) throw new Error("Import failed");
+
+      const result = await response.json();
+      
+      if (result.success && result.imported_count > 0) {
+        toast.success(`Импортировано команд: ${result.imported_count}`);
+        setImportDialogOpen(false);
+        fetchTeams();
+      } else {
+        toast.warning(result.message || "Не удалось импортировать команды");
+      }
+    } catch (error) {
+      toast.error("Ошибка импорта. Проверьте ID турнира.");
+      console.error(error);
+    } finally {
+      setImporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -169,13 +201,59 @@ export const WMFLTeamManager = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">Рейтинг команд WMFL</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Icon name="Plus" size={18} className="mr-2" />
-              Добавить команду
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Icon name="Download" size={18} className="mr-2" />
+                Импорт из WMFL
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Импорт команд из турнира WMFL</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="tournament_id">ID турнира</Label>
+                  <Input
+                    id="tournament_id"
+                    value={tournamentId}
+                    onChange={(e) => setTournamentId(e.target.value)}
+                    placeholder="1056456"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ID можно найти в URL турнира: wmfl.ru/tournament/[ID]/...
+                  </p>
+                </div>
+                <Button 
+                  onClick={handleImport} 
+                  disabled={importing || !tournamentId}
+                  className="w-full"
+                >
+                  {importing ? (
+                    <>
+                      <Icon name="Loader2" className="animate-spin mr-2" size={16} />
+                      Импортирую...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="Download" size={16} className="mr-2" />
+                      Импортировать
+                    </>
+                  )}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <Icon name="Plus" size={18} className="mr-2" />
+                Добавить команду
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
