@@ -9,6 +9,7 @@ import { NewsCard } from "@/components/NewsCard";
 import { NotificationBell } from "@/components/NotificationBell";
 import { TransferForm } from "@/components/TransferForm";
 import { PlayerRegistrationForm } from "@/components/PlayerRegistrationForm";
+import { WMFLTeamManager } from "@/components/WMFLTeamManager";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Icon from "@/components/ui/icon";
@@ -136,8 +137,12 @@ const Index = () => {
       </div>
 
       <div className="container mx-auto py-8 px-4">
-        <Tabs defaultValue="teams" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
+        <Tabs defaultValue="wmfl" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-8 lg:w-auto">
+            <TabsTrigger value="wmfl" className="gap-2">
+              <Icon name="Database" size={16} />
+              WMFL
+            </TabsTrigger>
             <TabsTrigger value="teams" className="gap-2">
               <Icon name="Shield" size={16} />
               Команды
@@ -167,6 +172,10 @@ const Index = () => {
               Новости
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="wmfl">
+            <WMFLTeamManager />
+          </TabsContent>
 
           <TabsContent value="teams" className="space-y-6">
             <div className="flex items-center justify-between">

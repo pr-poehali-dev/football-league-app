@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "Get all teams",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Create new team",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "team_name": "Test Team API",
+        "city": "Moscow",
+        "wins": 5,
+        "draws": 3,
+        "losses": 2,
+        "goals_for": 15,
+        "goals_against": 10,
+        "rating": 1600
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "team_name": "Test Team API"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
